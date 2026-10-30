@@ -1,9 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
  match /databases/{database}/documents {
-  function own(uid) { return request.auth != null && request.auth.uid == uid; }
+  function own(uid) { return request.auth != null && request.auth.uid == uid && request.auth.token.email_verified == true; }
   match /users/{uid}/data/bloom {
-   allow read, delete: if own(uid);
+   allow get, delete: if own(uid);
    allow create, update: if own(uid) && request.resource.data.keys().hasOnly(['state', 'updatedAt']) && request.resource.data.state is map && request.resource.data.state.version == 1;
   }
   match /users/{uid}/devices/{device} {

@@ -1,94 +1,80 @@
 # Bloom
 
-A calm, responsive daily intentions and rewards app. Built without a framework or build step, with an optional Firebase backend.
+A public daily intentions and rewards web app, connected to its own Firebase project.
 
-## Included
+**Web app:** https://bloom-daily-ritual-k31.anugpt-2812.chatgpt.site
 
-- Add/edit daily tasks, effort levels, time estimates, personal completion treats, reminders, and task filters.
-- Earn 20/40/60 points based on effort; redeem custom rewards with a preserved claims history.
-- Prevent undoing completed tasks when those points have already been spent. Completed tasks stay in the history; their titles can be edited.
-- Focus timer with a 25-minute session or a five-minute start, pause/resume, and focus history. The timer runs while the page remains open; a suspended browser may delay its completion alert.
-- Real completion-based streaks, a seven-day growth chart, and carry-forward for unfinished tasks on an empty day.
-- Device-local persistence, JSON export/restore, reduced-motion support, keyboard-friendly dialogs, and mobile bottom navigation.
-- Installable PWA with offline app-shell caching. The first visit must be online. Firebase sign-in and cloud sync require internet access.
-- Notification permission controls, test notifications, local reminders, a push-receiving service worker, and a scheduled Firebase function.
-- Firebase Email/Password authentication, per-user Firestore rules, and manual conflict choice when cloud data meets unsynced device data.
+**Firebase project:** `bloom-daily-311026` (separate from Penny)
 
-## Run locally
+## Accounts and privacy
 
-Requires Node.js 22+ for checks and Python 3 for the preview server.
+- Email/password account creation and sign-in.
+- Google sign-in through Firebase Authentication.
+- Email accounts must verify their email before the tracker or cloud data becomes available. Firestore rules also enforce `email_verified == true`; hiding screens is not the access control.
+- Verification email resend with a cooldown, a check-verification button that refreshes the Firebase token, and a recovery form for pasting a verification link.
+- The recovery form only accepts Bloom’s own or Firebase auth domain, verifies the action type and signed-in email, and never saves the link.
+- Password reset through Firebase’s standard email handler. The application also handles valid verification and password-reset action URLs if routed to it.
+- New and reset passwords must have 12–128 characters; the server enforces this policy. Email enumeration protection is enabled.
+- Session-only sign-in by default. Remember me explicitly enables persistent sign-in.
+- Each account has private Firestore records and a separate local cache. Sign-out clears the active tracker from the UI. A previous device-only plan is imported only after an explicit choice.
+- No service-account credentials or administrative tokens are shipped. `dist/firebase-config.js` contains the public web configuration, as intended by Firebase.
+
+## Daily experience
+
+- Daily tasks, effort levels, time estimates, optional personal treats, and reminders.
+- 20/40/60 points for task effort, custom rewards, and reward history. Spent points cannot be reused by undoing a completion.
+- Focus timer, real completion-based streaks, seven-day growth chart, and carry-forward of unfinished tasks.
+- Export/restore of a JSON backup. Responsive layouts and reduced-motion support.
+- Installable PWA. Sign-in and cloud sync require internet access. Browser caching and session availability affect offline access; the app keeps an account’s latest saved device data for recovery when possible.
+
+## Run and test
+
+The app has no frontend build step. Requires Python 3 for preview, Node.js 22+ for checks, and the Firebase CLI for emulator/backend commands.
 
 ```sh
 npm run dev
 ```
 
-Open http://localhost:4173. No npm install is needed for the web app.
+Open http://localhost:4173. Local production-auth sign-in is intentionally not authorized: the Firebase authorized-domain list is limited to the public app and Firebase helper domains. Use emulators for local account testing.
 
 ```sh
+npm install
 npm test
 npm run check
+cd firebase
+firebase emulators:start --only auth,firestore --project demo-bloom
 ```
 
-Deploy the contents of `dist/` to any HTTPS static hosting provider. Keep files at the origin root; the manifest, URLs, and service worker use `/`. The included `.openai/hosting.json` belongs to the current private Sites deployment.
+In another terminal, run `npm run test:firebase` from the app root. The four emulator integration checks cover unverified/forged claims, ownership isolation, token/reminder privacy, and the full email signup/verification/sign-in/reset flow. Open http://localhost:4173/?emulators=1 to use the browser UI against emulators on localhost. This switch only works on localhost or 127.0.0.1 and uses `demo-bloom`; the published app cannot connect to these test services.
 
-## Connect Firebase later
+There are 10 unit checks plus 4 backend integration checks. Browser QA covers the public welcome and account forms, verification gating and untrusted-link rejection, task saving, sign-out, and re-sign-in with persisted progress. Real inbox delivery and a full Google account login require a user completing those flows; automated verification uses isolated emulator accounts.
 
-The app works locally without Firebase. Firebase is not configured or deployed in this delivery.
+## Backend administration
 
-1. Create or select a Firebase project and register a Web app.
-2. Create a Cloud Firestore database in production mode.
-3. Enable Authentication → Sign-in method → Email/Password.
-4. In Authentication → Settings → Authorized domains, add the deployed hostname. Add `localhost` for development if needed.
-5. Deploy the included rules to your project using the Firebase CLI:
+Authentication providers are configured in `firebase/firebase.json`. Firestore is in `asia-south1` on the free-tier standard database. The deployed rules require a verified owner for private user documents. State-collection enumeration and unrelated paths are denied. Device and reminder collection queries are available only to their verified owner.
+
+To redeploy rules and indexes:
 
 ```sh
 cd firebase
-npx firebase-tools login
-npx firebase-tools use --add
-npx firebase-tools deploy --only firestore:rules,firestore:indexes
+firebase deploy --only firestore:rules,firestore:indexes --project bloom-daily-311026
 ```
 
-6. Open Bloom → Settings → Connect Firebase. Paste the **public web configuration JSON**, including `apiKey`, `authDomain`, `projectId`, `messagingSenderId`, and `appId`. This is public client configuration, not an administrative credential. Never use a service account or private key.
-7. Create an account or sign in. Your device data will upload if the cloud account is empty. When cloud data and unsaved device changes both exist, choose which version to keep. Export a backup first when switching accounts.
+Google sign-in is enabled with the Firebase helper redirect at `https://bloom-daily-311026.firebaseapp.com/__/auth/handler`. The production app hostname is authorized. Standard Firebase verification/password-reset emails return users to Bloom through action settings. A request to override the project email-template action URL was rejected by Firebase (`EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED`), so the standard handler is retained; both standard helper endpoints were verified reachable.
 
-Configuration is saved in that browser. Each browser/device must connect to the same Firebase project before signing in. For a consumer launch, put the public configuration into a checked-in deployment configuration and initialize it automatically instead of asking visitors to configure their own project.
+State sync uses one document per account and the latest saved version. Avoid editing one account on two devices at the same time. Unsynced device changes meeting cloud data trigger a choice of which version to keep. Export a backup before switching versions. Firestore’s 1 MiB document limit applies. Points are personal motivation, not money or a security boundary.
 
-Cloud sync uses one state document per account and the latest saved version. This is a personal tracker, not a collaborative editor. Avoid editing one account on two devices simultaneously. Firestore's 1 MiB document limit applies; archive long histories before approaching that limit. Rules isolate users; points are self-managed encouragement, not money or a security boundary.
+## Notifications
 
-## Enable background task notifications
+Permission-based test notifications, focus-completion alerts, and task nudges work while the app can execute. Browser and OS restrictions can delay them. Background scheduled reminders are **not deployed**. Their optional Firebase function is included under `firebase/functions/`; deploying it requires billing-enabled Cloud Functions/Cloud Scheduler and FCM configuration. No billing plan was upgraded for this release.
 
-Local notifications need browser permission. Task nudges run every 30 seconds while the page can execute JavaScript and only for tasks due in the last ten minutes. Browser or OS restrictions can delay delivery. Turning the toggle off pauses Bloom reminders; revoke notification permission through browser settings if desired.
+## Deployment
 
-For notifications when Bloom is closed:
-
-1. Enable the Firebase Cloud Messaging API and generate a Web Push certificate in Firebase project settings → Cloud Messaging. Copy the **public** VAPID key into Bloom's Firebase settings.
-2. The scheduled backend uses Cloud Functions and Cloud Scheduler. This requires the Firebase Blaze plan with billing enabled; review pricing before enabling it.
-3. Deploy the function with your own Firebase account:
-
-```sh
-cd firebase/functions
-npm install
-cd ..
-npx firebase-tools deploy --only functions:gentleNudges
-```
-
-4. Sign in to Bloom and switch device notifications on. If they were already on before connecting Firebase, switch them off and on again to register this browser's push token.
-5. Add a future task reminder. Keep the app open until the status says Synced, then close it and test delivery. The function checks due reminders every five minutes, so delivery is approximate. Due times use the device's local timezone when saved. Refresh/resave reminders after traveling between timezones.
-
-The function checks the task is still incomplete and notifications are still enabled, uses a delivery receipt to suppress repeat sends for the same reminder schedule, and removes invalid device tokens. Notification delivery depends on network, browser, OS, and FCM and is not guaranteed. Local and cloud delivery can overlap near the reminder time. FCM data messages are handled by the included shared service worker. Authenticated sign-out removes the current browser's cloud token when online.
-
-On iPhone/iPad, open in Safari, Add to Home Screen, then allow notifications from the installed app if supported by the OS. On Android/desktop, use Chrome or Edge's install option. A private Sites login or embedded preview may restrict service-worker/installation behavior; test the final consumer deployment in a normal browser.
-
-## Launch status and validation
-
-The Site is owner-private. Publication of the review preview was explicitly approved. Public audience/access, a consumer-facing Firebase configuration, and Firebase backend deployment still need your explicit project setup before inviting users.
-
-Six model tests cover task points/undo, spending protection, immutable reward history, streak behavior, backup validation, and local date boundaries. Syntax checks cover browser and function source. Browser QA covers desktop and 390 px mobile layouts, task creation, completion, reward redemption, spent-point protection, navigation, timer controls, and reload persistence. Cloud authentication, Firestore rules, real push delivery, OS installation, and offline behavior have not been verified against a configured Firebase project or installed device.
+The static app is deployed through the existing Sites project. Keep `dist/` at the origin root. `.openai/hosting.json` preserves the Site identity. Source, rules, and tests are included in the downloadable source archive; dependencies and local emulator state are excluded.
 
 ## References
 
-- [Firebase web setup](https://firebase.google.com/docs/web/setup)
-- [Email and password authentication](https://firebase.google.com/docs/auth/web/password-auth)
-- [Cloud Messaging web setup](https://firebase.google.com/docs/cloud-messaging/web/get-started)
-- [Scheduled functions](https://firebase.google.com/docs/functions/schedule-functions)
-
+- https://firebase.google.com/docs/auth/web/manage-users
+- https://firebase.google.com/docs/auth/web/google-signin
+- https://firebase.google.com/docs/auth/web/password-auth
+- https://firebase.google.com/docs/firestore/security/get-started
