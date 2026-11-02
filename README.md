@@ -4,6 +4,8 @@ A public daily intentions and rewards web app, connected to its own Firebase pro
 
 **Web app:** https://bloom-daily-ritual-k31.anugpt-2812.chatgpt.site
 
+**GitHub source:** https://github.com/kishanpadia/bloom-daily (public)
+
 **Firebase project:** `bloom-daily-311026` (separate from Penny)
 
 ## Accounts and privacy
@@ -71,6 +73,14 @@ Permission-based test notifications, focus-completion alerts, and task nudges wo
 ## Deployment
 
 The static app is deployed through the existing Sites project. Keep `dist/` at the origin root. `.openai/hosting.json` preserves the Site identity. Source, rules, and tests are included in the downloadable source archive; dependencies and local emulator state are excluded.
+
+## GitHub update workflow
+
+GitHub is the source of truth for all Bloom updates. The canonical local checkout is the dedicated `bloom` folder, with GitHub configured as `origin` and `main` tracking `origin/main`.
+
+For each completed update, review and validate the changes, create a descriptive commit, and push it to GitHub before publishing the application. `AGENTS.md` records this workflow for future coding sessions. Preserve existing user edits and do not rewrite shared history.
+
+Application source changes are then published through the existing Sites workflow using the same source commit. A GitHub push alone does not automatically deploy the web app. Repository settings and documentation-only updates do not require an app redeployment.
 
 ## References
 
