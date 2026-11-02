@@ -10,7 +10,7 @@
 ## Validation and publishing
 
 - For application changes, run `npm test` and `npm run check`. For authentication or database-rule changes, also run `npm run test:firebase` against the isolated Firebase emulators. Documentation-only edits need a diff review and whitespace check.
-- Push the completed source commit to GitHub before publishing an application update. The primary public app is https://bloomdaily.web.app on Firebase Hosting site `bloomdaily` in project `bloom-daily-311026`. Deploy the exact committed source with `firebase deploy --only hosting --project bloom-daily-311026` from `firebase/`.
+- Push the completed source commit to GitHub before publishing an application update. The primary public app is https://bloomdaily.web.app on Firebase Hosting site `bloomdaily` in project `bloom-daily-311026`. Deploy the exact committed source with `firebase deploy --only hosting --project bloom-daily-311026` from this repository root.
 - A push to GitHub does not automatically deploy the app. Complete and verify the Firebase Hosting deployment for app changes unless the user requests source-only work. Repository administration and documentation-only changes do not require an unchanged app to be redeployed. Preserve `.openai/hosting.json` for the legacy Site; use the Sites skill only when the user requests changes to that legacy deployment.
 - GitHub and the web app are public at the user's request. Firebase records must remain private to their verified owner; public repository or Site access never changes the database rules.
 

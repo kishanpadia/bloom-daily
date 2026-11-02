@@ -72,12 +72,11 @@ Permission-based test notifications, focus-completion alerts, and task nudges wo
 
 ## Deployment
 
-The public app is deployed to Firebase Hosting at **https://bloomdaily.web.app**. The Hosting site is `bloomdaily` in the existing `bloom-daily-311026` Firebase project. It uses the same Authentication and Firestore data as the original deployment. Keep `dist/` at the origin root; `firebase/firebase.json` points Hosting to that directory.
+The public app is deployed to Firebase Hosting at **https://bloomdaily.web.app**. The Hosting site is `bloomdaily` in the existing `bloom-daily-311026` Firebase project. It uses the same Authentication and Firestore data as the original deployment. Keep `dist/` at the origin root; the root `firebase.json` points Hosting to that directory. Backend configuration remains in `firebase/firebase.json`.
 
 After validating and pushing an update to GitHub, deploy the exact committed source:
 
 ```sh
-cd firebase
 firebase deploy --only hosting --project bloom-daily-311026
 ```
 
