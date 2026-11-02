@@ -2,7 +2,7 @@
 
 A public daily intentions and rewards web app, connected to its own Firebase project.
 
-**Web app:** https://bloom-daily-ritual-k31.anugpt-2812.chatgpt.site
+**Web app:** https://bloom.anugpt-2812.chatgpt.site
 
 **GitHub source:** https://github.com/kishanpadia/bloom-daily (public)
 
