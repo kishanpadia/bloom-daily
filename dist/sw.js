@@ -1,5 +1,5 @@
-const CACHE='bloom-v3-brand';
-const ASSETS=['/','/index.html','/style.css','/app.js','/model.js','/firebase.js','/firebase-config.js','/auth-utils.js','/manifest.webmanifest','/icon.svg','/icon-192.png','/icon-512.png','/bloom-mark.svg','/bloom-icon-192-v3.png','/bloom-icon-512-v3.png','/bloom-apple-touch-icon-v3.png','/app.js?v=brand-3','/style.css?v=brand-3'];
+const CACHE='bloom-v4-ux';
+const ASSETS=['/','/index.html','/style.css','/app.js','/model.js','/firebase.js','/firebase-config.js','/auth-utils.js','/manifest.webmanifest','/icon.svg','/icon-192.png','/icon-512.png','/bloom-mark.svg','/bloom-icon-192-v3.png','/bloom-icon-512-v3.png','/bloom-apple-touch-icon-v3.png','/app.js?v=ux-4','/style.css?v=ux-4'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{const url=new URL(e.request.url);if(e.request.method!=='GET'||url.origin!==self.location.origin||url.searchParams.has('oobCode')||url.searchParams.has('mode'))return;e.respondWith(fetch(e.request).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));}return response;}).catch(()=>caches.match(e.request).then(r=>r||(e.request.mode==='navigate'?caches.match('/index.html'):Response.error()))));});
